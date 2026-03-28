@@ -5,3 +5,4 @@ regex
 
 # --- Claude (Anthropic API) ---
 anthropic
+dotenv
