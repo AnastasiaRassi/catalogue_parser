@@ -1,94 +1,144 @@
-import os
-import base64
+import anthropic
+import json
 from pathlib import Path
-from PROMPT import PROMPT
-import fitz  # PyMuPDF
-from anthropic import Anthropic
+import time
 from dotenv import load_dotenv
+import os
+from typing import Dict, Any
+from utils.extractor_utils import extract_catalogue_page
 
-PDF_PATH = r"C:\Users\User\Documents\catalogue_parser\catalogues\2026 outdoor catalog 18-3.pdf"  # change this
-
-
-# --- Load API key ---
 load_dotenv()
-client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+API_KEY = anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-
-# --- Extract text from PDF page ---
-def extract_text_from_pdf(pdf_path: str, page_num: int) -> str:
-    doc = fitz.open(pdf_path)
-    page = doc[page_num]
-    return page.get_text()
-
-
-# --- (Optional) Extract image of page ---
-def extract_image_from_pdf(pdf_path: str, page_num: int) -> bytes:
-    doc = fitz.open(pdf_path)
-    page = doc[page_num]
-    pix = page.get_pixmap()
-    return pix.tobytes("png")
-
-
-# --- Send to Claude ---
-def extract_with_claude(text: str = None, image_bytes: bytes = None):
-    content = []
-
-    if text:
-        content.append({
-            "type": "text",
-            "text": f"""
-Extract all products from this catalogue page.
-
-Return JSON list with:
-- name
-- sku (if available)
-- price (if available)
-
-Text:
-{text}
-"""
-        })
-
-    if image_bytes:
-        content.append({
-            "type": "image",
-            "source": {
-                "type": "base64",
-                "media_type": "image/png",
-                "data": base64.b64encode(image_bytes).decode("utf-8"),
-            },
-        })
-
-    response = client.messages.create(
-        model="claude-3-5-sonnet-latest",
-        max_tokens=1000,
-        temperature=0,
-        messages=[
-            {"role": "user", "content": content}
-        ],
-    )
-
-    return response.content[0].text
-
-
-# --- Main test runner ---
-def run_single_page(pdf_path: str, page_num: int, use_image=False):
-    print(f"\n📄 Processing page {page_num}...\n")
-
-    if use_image:
-        img = extract_image_from_pdf(pdf_path, page_num)
-        result = extract_with_claude(image_bytes=img)
+def process_catalogue(
+    images_dir: str,
+    output_file: str,
+    skip_first: int = 3,
+    start_page: int = 1,
+    end_page: int = None,
+    model: str = "claude-sonnet-3-5-20241022",
+    delay: float = 0.5
+) -> Dict[str, Any]:
+    """
+    Process entire catalogue directory.
+    
+    Args:
+        images_dir: Directory containing catalogue images
+        output_file: JSON file to save results
+        skip_first: Number of initial images to skip
+        start_page: Page number to start processing (1-indexed)
+        end_page: Page number to end processing (None = all)
+        model: Claude model to use
+        delay: Delay between API calls in seconds
+        
+    Returns:
+        Dictionary with processing summary
+    """
+    client = anthropic.Anthropic(api_key=API_KEY)
+    images_path = Path(images_dir)
+    
+    # Get all image files, sorted
+    image_files = sorted([
+        f for f in images_path.glob("*")
+        if f.suffix.lower() in [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+    ])
+    
+    print(f"Found {len(image_files)} image files")
+    print(f"Skipping first {skip_first} images")
+    
+    # Skip first N images
+    image_files = image_files[skip_first:]
+    
+    # Apply page range if specified
+    if end_page:
+        image_files = image_files[start_page-1:end_page]
     else:
-        text = extract_text_from_pdf(pdf_path, page_num)
-        result = extract_with_claude(text=text)
+        image_files = image_files[start_page-1:]
+    
+    print(f"Processing {len(image_files)} images (pages {start_page} to {start_page + len(image_files) - 1})")
+    
+    all_results = []
+    all_products = []
+    failed_pages = []
+    
+    for idx, image_file in enumerate(image_files):
+        page_num = start_page + idx
+        print(f"\nProcessing page {page_num}: {image_file.name}...")
+        
+        result = extract_catalogue_page(client, image_file, page_num, model)
+        all_results.append(result)
+        
+        if result["success"]:
+            all_products.extend(result["products"])
+            print(f"  ✓ Extracted {len(result['products'])} products")
+        else:
+            failed_pages.append(page_num)
+            print(f"  ✗ Failed: {result['error']}")
+        
+        # Rate limiting - be nice to the API
+        if idx < len(image_files) - 1:  # Don't delay after last image
+            time.sleep(delay)
+    
+    # Save results
+    output_data = {
+        "summary": {
+            "total_pages": len(image_files),
+            "successful_pages": len([r for r in all_results if r["success"]]),
+            "failed_pages": failed_pages,
+            "total_products": len(all_products)
+        },
+        "products": all_products,
+        "detailed_results": all_results
+    }
+    
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
+    
+    print(f"\n{'='*60}")
+    print(f"EXTRACTION COMPLETE")
+    print(f"{'='*60}")
+    print(f"Total pages processed: {len(image_files)}")
+    print(f"Successful: {output_data['summary']['successful_pages']}")
+    print(f"Failed: {len(failed_pages)}")
+    print(f"Total products extracted: {len(all_products)}")
+    print(f"Results saved to: {output_file}")
+    
+    if failed_pages:
+        print(f"\nFailed pages: {failed_pages}")
+    
+    return output_data
 
-    print("✅ Result:\n")
-    print(result)
 
-
-# --- CLI entry ---
 if __name__ == "__main__":
-    PAGE_NUM = 0                      # change page here
-    USE_IMAGE = False                # toggle this
-
-    run_single_page(PDF_PATH, PAGE_NUM, USE_IMAGE)
+    # TEST MODE - Process only 4 images
+    TEST_MODE = True
+    
+    if TEST_MODE:
+        print("=" * 60)
+        print("RUNNING IN TEST MODE (4 images only)")
+        print("=" * 60)
+        
+        result = process_catalogue(
+            images_dir="catalogue_images",  # Your directory with extracted PDF images
+            output_file="catalogue_test_output.json",
+            skip_first=3,  # Skip first 3 images (cover, intro, etc.)
+            start_page=1,
+            end_page=4,  # Only process 4 pages for testing
+            model="claude-sonnet-3-5-20241022",
+            delay=1.0  # 1 second delay between calls
+        )
+    else:
+        # FULL RUN - Process all 285 images
+        print("=" * 60)
+        print("RUNNING FULL EXTRACTION (all images)")
+        print("=" * 60)
+        
+        result = process_catalogue(
+            images_dir="catalogue_images",
+            output_file="catalogue_full_output.json",
+            skip_first=3,
+            start_page=1,
+            end_page=None,  # Process all
+            model="claude-sonnet-3-5-20241022",
+            delay=0.5
+        )

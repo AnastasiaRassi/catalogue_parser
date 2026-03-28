@@ -1,3 +1,4 @@
+# Your extraction prompt
 PROMPT = """Extract all product information from this catalogue image. Follow these rules:
 
 - If a product shows multiple color swatches, list each color separately as individual options. Pick most probable color name.
@@ -49,3 +50,4 @@ Output a JSON array. Each product should be an object with this structure:
 I will provide the page number - include it in each product's JSON object.
 
 Page number for this image: """
+
