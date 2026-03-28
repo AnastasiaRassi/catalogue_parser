@@ -1,0 +1,7 @@
+# --- Core data handling ---
+pandas
+numpy
+regex
+
+# --- Claude (Anthropic API) ---
+anthropic
