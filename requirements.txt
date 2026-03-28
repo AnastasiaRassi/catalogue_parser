@@ -1,8 +1,12 @@
-# --- Core data handling ---
 pandas
 numpy
 regex
 
-# --- Claude (Anthropic API) ---
+# for claude api. Get an api key to use here & buy some credits
 anthropic
+
+# to load the token from .env (put this in .gitignore of course!!)
 dotenv
+
+# to turn your catalogue to images
+pymupdf

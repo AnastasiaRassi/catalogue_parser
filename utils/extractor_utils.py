@@ -1,15 +1,59 @@
 import base64
 import json
+from anthropic import Anthropic
 import anthropic
 from pathlib import Path
 from typing import Dict, Any
-from prompt import PROMPT
+from src.prompt import PROMPT
 
 
-def encode_image(image_path: Path) -> str:
-    """Encode image to base64 string."""
-    with open(image_path, "rb") as image_file:
-        return base64.standard_b64encode(image_file.read()).decode("utf-8")
+# def encode_image(image_path: Path) -> str:
+#     """Encode image to base64 string."""
+#     with open(image_path, "rb") as image_file:
+#         return base64.standard_b64encode(image_file.read()).decode("utf-8")
+
+from PIL import Image
+import io
+
+
+def compress_image_if_needed(image_path: Path, max_size_mb: float = 4.5) -> tuple[str, str]:
+    """Compress image if needed. Returns (base64_data, media_type)."""
+    max_bytes = int(max_size_mb * 1024 * 1024)
+    
+    # Read original file
+    with open(image_path, "rb") as f:
+        original_data = f.read()
+    
+    original_media_type = get_image_media_type(image_path)
+    
+    # If under limit, return as-is
+    if len(original_data) <= max_bytes:
+        return base64.standard_b64encode(original_data).decode("utf-8"), original_media_type
+    
+    # Compress image
+    img = Image.open(image_path)
+    
+    # Convert to RGB if needed
+    if img.mode in ('RGBA', 'LA', 'P'):
+        img = img.convert('RGB')
+    
+    # Try progressively lower quality
+    for quality in [85, 75, 65, 55, 45]:
+        buffer = io.BytesIO()
+        img.save(buffer, format='JPEG', quality=quality, optimize=True)
+        compressed_data = buffer.getvalue()
+        
+        if len(compressed_data) <= max_bytes:
+            print(f"  Compressed from {len(original_data)/1024/1024:.1f}MB to {len(compressed_data)/1024/1024:.1f}MB (quality={quality})")
+            return base64.standard_b64encode(compressed_data).decode("utf-8"), "image/jpeg"  # ← Changed!
+    
+    # If still too large, resize
+    img.thumbnail((2000, 2000))
+    buffer = io.BytesIO()
+    img.save(buffer, format='JPEG', quality=45, optimize=True)
+    compressed_data = buffer.getvalue()
+    print(f"  Resized and compressed to {len(compressed_data)/1024/1024:.1f}MB")
+    return base64.standard_b64encode(compressed_data).decode("utf-8"), "image/jpeg"  # ← Changed!
 
 
 def get_image_media_type(image_path: Path) -> str:
@@ -45,9 +89,8 @@ def extract_catalogue_page(
     """
     try:
         # Encode image
-        image_data = encode_image(image_path)
-        media_type = get_image_media_type(image_path)
-        
+        image_data, media_type = compress_image_if_needed(image_path)
+
         # Create message with image
         message = client.messages.create(
             model=model,

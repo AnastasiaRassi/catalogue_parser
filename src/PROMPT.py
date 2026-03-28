@@ -1,11 +1,39 @@
+# PROMPT = """
+# Extract product data from this catalogue page.
+
+# Return ONLY valid JSON array.
+
+# Each product:
+# {
+#   "page": number,
+#   "model": string (MOD#..) or null,
+#   "price": string (The number in the image) or null,
+#   "description": string or null,
+#   "dimensions": string or null,
+#   "materials": object or null,
+#   "colors": object or null,
+#   "seater": string or null
+# }
+
+# Rules:
+# - Split color swatches into arrays
+# - Extract visible prices
+# - Ignore decorative or duplicate thumbnail-only items
+# - Include page number in every item
+# - If missing data, use null
+# - Do not add explanations or text outside JSON
+# """
+
+
+
 # Your extraction prompt
 PROMPT = """Extract all product information from this catalogue image. Follow these rules:
 
-- If a product shows multiple color swatches, list each color separately as individual options. Pick most probable color name.
-- If it shows only one color swatch, list ONLY that color.
-- If an item has color swatches for both cushion and fabric, set color options for BOTH separately.
-- Escape asterisks so they don't become italic markdown (\*)
-- Price is the large number visible WITHIN the images, usually on corners.
+If a product shows multiple color swatches, list each color separately as individual options. Pick most probable color name.
+If it shows only one color swatch, list ONLY that color.
+If an item has color swatches for both cushion and fabric, set color options for BOTH separately.
+Keep asterisks (*) as normal characters. Do not use backslashes.
+Price is the large number visible WITHIN the images, usually on corners.
 
 **JSON FORMAT:**
 Output a JSON array. Each product should be an object with this structure:
@@ -26,10 +54,7 @@ Output a JSON array. Each product should be an object with this structure:
       "chair": ["Beige"],
       "cushion": ["Green"]
     },
-    "other_characteristics": {
-      "seater": "1 table + 8 chairs"
-    }
-  }
+      "seater": "1 table + 8 chairs"  }
 ]
 ```
 
@@ -42,9 +67,8 @@ Output a JSON array. Each product should be an object with this structure:
 - Anything unidentified (Crucial)
 
 **RULES:**
-- Omit any field that's not present in the image (don't include null or empty values)
 - If you see a small product image beside a main product without its own description/price/model number, IGNORE it - it's just a combo suggestion
-- Extract items even if they're missing some characteristics
+- Extract items even if they're missing some or all characteristics
 
 **PAGE TRACKING:**
 I will provide the page number - include it in each product's JSON object.
