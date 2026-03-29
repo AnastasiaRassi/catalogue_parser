@@ -4,27 +4,30 @@ from pathlib import Path
 import time
 from dotenv import load_dotenv
 import os
-from typing import Dict, Any
-from utils.extractor_utils import extract_catalogue_page
+from typing import Dict, Any, List
+from utils.extractor_utils import extract_catalogue_page_batch
 from anthropic import Anthropic
-import anthropic
 
-model = "claude-sonnet-4-6"
+model = "claude-haiku-4-5"
+# model = "claude-sonnet-4-6"
+
 
 load_dotenv()
 API_KEY = os.getenv("ANTHROPIC_API_KEY") 
 
+
 def process_catalogue(
     images_dir: str,
-    output_file: str ,
-    skip_first: int ,
+    output_file: str,
+    skip_first: int,
     start_page: int = 1,
     end_page: int = None,
     model: str = model,
-    delay: float = 0.5
+    delay: float = 0.5,
+    batch_size: int = 2
 ) -> Dict[str, Any]:
     """
-    Process entire catalogue directory.
+    Process entire catalogue directory with batching support.
     
     Args:
         images_dir: Directory containing catalogue images
@@ -34,6 +37,7 @@ def process_catalogue(
         end_page: Page number to end processing (None = all)
         model: Claude model to use
         delay: Delay between API calls in seconds
+        batch_size: Number of images to process per API call (1 = no batching)
         
     Returns:
         Dictionary with processing summary
@@ -53,98 +57,89 @@ def process_catalogue(
     # Skip first N images
     image_files = image_files[skip_first:]
     
-    # Apply page range if specified (FIXED)
+    # Apply page range if specified
     start_idx = start_page - 1
-
     if end_page is not None:
         image_files = image_files[start_idx:end_page]
     else:
         image_files = image_files[start_idx:]
-    print(f"Processing {len(image_files)} images (pages {start_page} to {start_page + len(image_files) - 1})")
     
-    progress_file = output_file.replace('.json', '_progress.json')
+    print(f"Processing {len(image_files)} images in batches of {batch_size}")
+    print(f"Pages {start_page} to {start_page + len(image_files) - 1}")
+    
+    # Progress file for crash recovery
+    progress_file = output_file.replace('.json', '_progress.json').replace('.txt', '_progress.json')
     
     # Load existing progress if it exists
     if Path(progress_file).exists():
-        with open(progress_file, 'r') as f:
+        with open(progress_file, 'r', encoding='utf-8') as f:
             checkpoint = json.load(f)
             all_results = checkpoint.get('detailed_results', [])
             all_products = checkpoint.get('products', [])
-            completed_pages = {r['page'] for r in all_results if r['success']}
+            completed_pages = {r['page'] for r in all_results if r.get('success')}
             print(f"Resuming from checkpoint: {len(completed_pages)} pages already completed")
     else:
         all_results = []
         all_products = []
         completed_pages = set()
-    # END OF NEW LINES
     
-    # Remove these old lines:
-    # all_results = []
-    # all_products = []
     failed_pages = []
     
-    for idx, image_file in enumerate(image_files):
-        page_num = start_page + idx
+    # Process in batches
+    for batch_start_idx in range(0, len(image_files), batch_size):
+        batch_end_idx = min(batch_start_idx + batch_size, len(image_files))
+        batch_files = image_files[batch_start_idx:batch_end_idx]
+        batch_page_numbers = [start_page + batch_start_idx + i for i in range(len(batch_files))]
         
-        # ADD THIS LINE:
-        if page_num in completed_pages:
-            print(f"Skipping page {page_num} (already completed)")
+        # Skip if all pages in batch already completed
+        if all(page_num in completed_pages for page_num in batch_page_numbers):
+            print(f"\nSkipping batch pages {batch_page_numbers[0]}-{batch_page_numbers[-1]} (already completed)")
             continue
         
-        print(f"\nProcessing page {page_num}: {image_file.name}...")
-        
-        result = extract_catalogue_page(client, image_file, page_num, model)
-        all_results.append(result)
-        
-        if result["success"]:
-            all_products.extend(result["products"])
-            print(f"  ✓ Extracted {len(result['products'])} products")
+        print(f"\n{'='*60}")
+        if len(batch_files) > 1:
+            print(f"Processing batch: pages {batch_page_numbers[0]}-{batch_page_numbers[-1]}")
         else:
-            failed_pages.append(page_num)
-            print(f"  ✗ Failed: {result['error']}")
+            print(f"Processing page {batch_page_numbers[0]}")
+        print(f"Files: {[f.name for f in batch_files]}")
+        print(f"{'='*60}")
         
-        # ADD THESE LINES AFTER EACH PAGE:
-        # Save progress after each page
+        # Extract batch
+        batch_results = extract_catalogue_page_batch(
+            client, 
+            batch_files, 
+            batch_page_numbers, 
+            model
+        )
+        
+        # Process results
+        for result in batch_results:
+            all_results.append(result)
+            
+            if result["success"]:
+                all_products.extend(result["products"])
+                print(f"  ✓ Page {result['page']}: Extracted {len(result['products'])} products")
+            else:
+                failed_pages.append(result['page'])
+                print(f"  ✗ Page {result['page']}: Failed - {result['error']}")
+        
+        # Save progress after each batch
         checkpoint_data = {
             'products': all_products,
             'detailed_results': all_results
         }
         with open(progress_file, 'w', encoding='utf-8') as f:
             json.dump(checkpoint_data, f, indent=2, ensure_ascii=False)
-        # END OF NEW LINES
         
-        # Rate limiting
-        if idx < len(image_files) - 1:
-            time.sleep(delay)
-
-
-    all_results = []
-    all_products = []
-    failed_pages = []
-    
-    for idx, image_file in enumerate(image_files):
-        page_num = start_page + idx
-        print(f"\nProcessing page {page_num}: {image_file.name}...")
-        
-        result = extract_catalogue_page(client, image_file, page_num, model)
-        all_results.append(result)
-        
-        if result["success"]:
-            all_products.extend(result["products"])
-            print(f"  ✓ Extracted {len(result['products'])} products")
-        else:
-            failed_pages.append(page_num)
-            print(f"  ✗ Failed: {result['error']}")
-        
-        # Rate limiting - be nice to the API
-        if idx < len(image_files) - 1:  # Don't delay after last image
+        # Rate limiting between batches
+        if batch_end_idx < len(image_files):
             time.sleep(delay)
     
-    # Save results
+    # Save final results
     output_data = {
         "summary": {
             "total_pages": len(image_files),
-            "successful_pages": len([r for r in all_results if r["success"]]),
+            "successful_pages": len([r for r in all_results if r.get("success")]),
             "failed_pages": failed_pages,
             "total_products": len(all_products)
         },
@@ -171,40 +166,37 @@ def process_catalogue(
 
 
 if __name__ == "__main__":
-    # TEST MODE - Process only 4 images
+    # TEST MODE - Process only a few images to verify quality
     TEST_MODE = True
     
     if TEST_MODE:
         print("=" * 60)
-        print("RUNNING IN TEST MODE (3 images only)")
+        print("RUNNING IN TEST MODE")
         print("=" * 60)
         
         result = process_catalogue(
             images_dir=r"C:\Users\User\Documents\catalogue_parser\catalogues\images", 
-            output_file=r"C:\Users\User\Documents\catalogue_parser\data\testing\testing.txt",
-            skip_first=3,  # Skip first 3 images (cover, intro, etc.)
-            start_page=1,
-            end_page=5,  # Only process 4 pages for testing
-            model = model,
-            delay=1.0  # 1 second delay between calls
+            output_file=r"C:\Users\User\Documents\catalogue_parser\data\testing\testing.json",
+            skip_first=0,  # Skip cover pages
+            start_page=117,
+            end_page=118,  # Test first 10 catalogue pages
+            model=model,
+            delay=1.0,
+            batch_size=2  # Process 2 images per API call
         )
     else:
-        # FULL RUN - Process all 285 images
+        # FULL RUN - Process all images
         print("=" * 60)
-        print("RUNNING FULL EXTRACTION (all images)")
+        print("RUNNING FULL EXTRACTION")
         print("=" * 60)
         
-
-        
-        BEGIN_AT = 3
-        PAGES_AFTER_BEGIN = 287
-
         result = process_catalogue(
-            images_dir=  r"C:\Users\User\Documents\catalogue_parser\catalogues\images",
-            output_file =  r"C:\Users\User\Documents\catalogue_parser\data\json_results",
-            skip_first=BEGIN_AT,
+            images_dir=r"C:\Users\User\Documents\catalogue_parser\catalogues\images",
+            output_file=r"C:\Users\User\Documents\catalogue_parser\data\full_results.json",
+            skip_first=3,  # Skip first 3 pages (cover, intro, etc.)
             start_page=1,
-            end_page = PAGES_AFTER_BEGIN,  # Process all
-            model = model,
-            delay=0.5
+            end_page=287,  # 291 total - 3 skip - 1 last page = 287
+            model=model,
+            delay=0.5,
+            batch_size=2  # Batch 2 images per call for speed
         )
