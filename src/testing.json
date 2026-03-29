@@ -1,0 +1,269 @@
+{
+  "summary": {
+    "total_pages": 1,
+    "successful_pages": 3,
+    "failed_pages": [],
+    "total_products": 6
+  },
+  "products": [
+    {
+      "page": 87,
+      "model": "MOD#9519/5",
+      "price": "86754",
+      "dimensions": "Set: 242*242*65 Cm, 1 Seat: 72*66*65 Cm, Table: 105*105*67 Cm",
+      "materials": {
+        "frame": "Aluminum frame"
+      },
+      "colors": {
+        "cushion": [
+          "green",
+          "gray",
+          "red",
+          "blue"
+        ],
+        "frame": "white"
+      },
+      "seater":  "Set corner + 1+ Table",
+      "other": {
+        "type": null
+      }
+    },
+    {
+      "page": 87,
+      "model": "MOD#61337",
+      "price": "96002",
+      "dimensions": "Set: 306*244*74 Cm, Table: 110*60*45/57 Cm",
+      "materials": {
+        "frame": "Aluminum frame"
+      },
+      "colors": {
+        "cushion": "gray",
+        "frame": "white"
+      },
+      "seater": "Corner set + table",
+      "other": {
+        "type": null
+      }
+    },
+    {
+      "page": 88,
+      "model": "MOD#3019",
+      "price": "75502",
+      "dimensions": "Set: 243*186*68 Cm, 1 Seat: 65*68*65 Cm, Table: 130*70*65 Cm",
+      "materials": {
+        "frame": "Aluminum frame",
+        "table_top": "Glass"
+      },
+      "colors": {
+        "cushion": "gray",
+        "frame": "white"
+      },
+      "seater": "Corner set + 1 + Table",
+      "other": {
+        "type":  null
+      }
+    },
+    {
+      "page": 88,
+      "model": "MOD#7088",
+      "price": "96002",
+      "dimensions": "Set: 246*246*80 Cm, Table: 110*60*40 Cm",
+      "materials": {
+        "frame": "Aluminum frame",
+        "armrest": "Full polywood",
+        "table_top": "Full polywood"
+      },
+      "colors": {
+        "cushion": "gray",
+        "frame": "white"
+      },
+      "seater": "Corner set + table",
+      "other": {
+        "type": null,
+        "foldable_arm": true
+      }
+    },
+    {
+      "page": 174,
+      "model": "MOD#089/203",
+      "price": null,
+      "dimensions": "130*70*110 Cm",
+      "materials": {
+        "frame": "Aluminum",
+        "top": "Polywood"
+      },
+      "colors": {
+        "textile": "Light gray",
+        "aluminum": "White"
+      },
+      "seater": "Bar table + 4 Bar chairs",
+      "other": {
+        "type": null,
+        "product_code": "96002"
+      }
+    },
+    {
+      "page": 174,
+      "model": "MOD#089/203",
+      "price": null,
+      "dimensions": "130*70*110 Cm",
+      "materials": {
+        "frame": "Aluminum",
+        "top": "Polywood"
+      },
+      "colors": {
+        "textile": "Dark gray",
+        "aluminum": "Dark gray"
+      },
+      "seater": "Bar table + 4 Bar chairs",
+      "other": {
+        "type": null,
+        "product_code": "96002"
+      }
+    }
+  ],
+  "detailed_results": [
+    {
+      "success": true,
+      "page": 87,
+      "image_path": "C:\\Users\\User\\Documents\\catalogue_parser\\catalogues\\images\\page_090.png",
+      "products": [
+        {
+          "page": 87,
+          "model": "MOD#9519/5",
+          "price": "86754",
+          "dimensions": "Set: 242*242*65 Cm, 1 Seat: 72*66*65 Cm, Table: 105*105*67 Cm",
+          "materials": {
+            "frame": "Aluminum frame"
+          },
+          "colors": {
+            "cushion": [
+              "green",
+              "gray",
+              "red",
+              "blue"
+            ],
+            "frame": "white"
+          },
+          "seater": null,
+          "other": {
+            "type": "Set corner + 1+ Table"
+          }
+        },
+        {
+          "page": 87,
+          "model": "MOD#61337",
+          "price": "96002",
+          "dimensions": "Set: 306*244*74 Cm, Table: 110*60*45/57 Cm",
+          "materials": {
+            "frame": "Aluminum frame"
+          },
+          "colors": {
+            "cushion": "gray",
+            "frame": "white"
+          },
+          "seater": null,
+          "other": {
+            "type": "Corner set + table"
+          }
+        }
+      ],
+      "raw_response": "```json\n[\n  {\n    \"page\": 87,\n    \"products\": [\n      {\n        \"page\": 87,\n        \"model\": \"MOD#9519/5\",\n        \"price\": \"86754\",\n        \"dimensions\": \"Set: 242*242*65 Cm, 1 Seat: 72*66*65 Cm, Table: 105*105*67 Cm\",\n        \"materials\": {\n          \"frame\": \"Aluminum frame\"\n        },\n        \"colors\": {\n          \"cushion\": [\"green\", \"gray\", \"red\", \"blue\"],\n          \"frame\": \"white\"\n        },\n        \"seater\": null,\n        \"other\": {\n          \"type\": \"Set corner + 1+ Table\"\n        }\n      },\n      {\n        \"page\": 87,\n        \"model\": \"MOD#61337\",\n        \"price\": \"96002\",\n        \"dimensions\": \"Set: 306*244*74 Cm, Table: 110*60*45/57 Cm\",\n        \"materials\": {\n          \"frame\": \"Aluminum frame\"\n        },\n        \"colors\": {\n          \"cushion\": \"gray\",\n          \"frame\": \"white\"\n        },\n        \"seater\": null,\n        \"other\": {\n          \"type\": \"Corner set + table\"\n        }\n      }\n    ]\n  },\n  {\n    \"page\": 88,\n    \"products\": [\n      {\n        \"page\": 88,\n        \"model\": \"MOD#3019\",\n        \"price\": \"75502\",\n        \"dimensions\": \"Set: 243*186*68 Cm, 1 Seat: 65*68*65 Cm, Table: 130*70*65 Cm\",\n        \"materials\": {\n          \"frame\": \"Aluminum frame\",\n          \"table_top\": \"Glass\"\n        },\n        \"colors\": {\n          \"cushion\": \"gray\",\n          \"frame\": \"white\"\n        },\n        \"seater\": null,\n        \"other\": {\n          \"type\": \"Corner set + 1 + Table\"\n        }\n      },\n      {\n        \"page\": 88,\n        \"model\": \"MOD#7088\",\n        \"price\": \"96002\",\n        \"dimensions\": \"Set: 246*246*80 Cm, Table: 110*60*40 Cm\",\n        \"materials\": {\n          \"frame\": \"Aluminum frame\",\n          \"armrest\": \"Full polywood\",\n          \"table_top\": \"Full polywood\"\n        },\n        \"colors\": {\n          \"cushion\": \"gray\",\n          \"frame\": \"white\"\n        },\n        \"seater\": null,\n        \"other\": {\n          \"type\": \"Corner set + table\",\n          \"foldable_arm\": true\n        }\n      }\n    ]\n  }\n]\n```",
+      "error": null
+    },
+    {
+      "success": true,
+      "page": 88,
+      "image_path": "C:\\Users\\User\\Documents\\catalogue_parser\\catalogues\\images\\page_091.png",
+      "products": [
+        {
+          "page": 88,
+          "model": "MOD#3019",
+          "price": "75502",
+          "dimensions": "Set: 243*186*68 Cm, 1 Seat: 65*68*65 Cm, Table: 130*70*65 Cm",
+          "materials": {
+            "frame": "Aluminum frame",
+            "table_top": "Glass"
+          },
+          "colors": {
+            "cushion": "gray",
+            "frame": "white"
+          },
+          "seater": "Corner set + 1 + Table",
+          "other": {
+            "type": ""
+          }
+        },
+        {
+          "page": 88,
+          "model": "MOD#7088",
+          "price": "96002",
+          "dimensions": "Set: 246*246*80 Cm, Table: 110*60*40 Cm",
+          "materials": {
+            "frame": "Aluminum frame",
+            "armrest": "Full polywood",
+            "table_top": "Full polywood"
+          },
+          "colors": {
+            "cushion": "gray",
+            "frame": "white"
+          },
+          "seater": null,
+          "other": {
+            "type": "Corner set + table",
+            "foldable_arm": true
+          }
+        }
+      ],
+      "raw_response": null,
+      "error": null
+    },
+    {
+      "success": true,
+      "page": 174,
+      "image_path": "C:\\Users\\User\\Documents\\catalogue_parser\\catalogues\\images\\page_177.png",
+      "products": [
+        {
+          "page": 174,
+          "model": "MOD#089/203",
+          "price": null,
+          "dimensions": "130*70*110 Cm",
+          "materials": {
+            "frame": "Aluminum",
+            "top": "Polywood"
+          },
+          "colors": {
+            "textile": "Light gray",
+            "aluminum": "White"
+          },
+          "seater": "4",
+          "other": {
+            "type": "Bar table + 4 Bar chairs",
+            "product_code": "96002"
+          }
+        },
+        {
+          "page": 174,
+          "model": "MOD#089/203",
+          "price": null,
+          "dimensions": "130*70*110 Cm",
+          "materials": {
+            "frame": "Aluminum",
+            "top": "Polywood"
+          },
+          "colors": {
+            "textile": "Dark gray",
+            "aluminum": "Dark gray"
+          },
+          "seater": "4",
+          "other": {
+            "type": "Bar table + 4 Bar chairs",
+            "product_code": "96002"
+          }
+        }
+      ],
+      "raw_response": "```json\n[\n  {\n    \"page\": 174,\n    \"products\": [\n      {\n        \"page\": 174,\n        \"model\": \"MOD#089/203\",\n        \"price\": null,\n        \"dimensions\": \"130*70*110 Cm\",\n        \"materials\": {\n          \"frame\": \"Aluminum\",\n          \"top\": \"Polywood\"\n        },\n        \"colors\": {\n          \"textile\": \"Light gray\",\n          \"aluminum\": \"White\"\n        },\n        \"seater\": \"4\",\n        \"other\": {\n          \"type\": \"Bar table + 4 Bar chairs\",\n          \"product_code\": \"96002\"\n        }\n      },\n      {\n        \"page\": 174,\n        \"model\": \"MOD#089/203\",\n        \"price\": null,\n        \"dimensions\": \"130*70*110 Cm\",\n        \"materials\": {\n          \"frame\": \"Aluminum\",\n          \"top\": \"Polywood\"\n        },\n        \"colors\": {\n          \"textile\": \"Dark gray\",\n          \"aluminum\": \"Dark gray\"\n        },\n        \"seater\": \"4\",\n        \"other\": {\n          \"type\": \"Bar table + 4 Bar chairs\",\n          \"product_code\": \"96002\"\n        }\n      }\n    ]\n  }\n]\n```",
+      "error": null
+    }
+  ]
+}

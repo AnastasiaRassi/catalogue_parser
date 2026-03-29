@@ -9,56 +9,58 @@ from src.prompt import PROMPT
 
 
 def get_image_media_type(image_path: Path) -> str:
-    """Determine media type from file extension."""
     extension = image_path.suffix.lower()
     media_types = {
         ".jpg": "image/jpeg",
         ".jpeg": "image/jpeg",
         ".png": "image/png",
         ".gif": "image/gif",
-        ".webp": "image/webp"
+        ".webp": "image/webp",
     }
     return media_types.get(extension, "image/jpeg")
 
 
-def compress_image_if_needed(image_path: Path, max_size_mb: float = 4.5) -> tuple[str, str]:
-    """Compress image if needed. Returns (base64_data, media_type)."""
+def compress_image_if_needed(image_path: Path, max_size_mb: float = 3.5) -> tuple[str, str]:
     max_bytes = int(max_size_mb * 1024 * 1024)
-    
-    # Read original file
+
     with open(image_path, "rb") as f:
         original_data = f.read()
-    
-    original_media_type = get_image_media_type(image_path)
-    
-    # If under limit, return as-is
-    if len(original_data) <= max_bytes:
-        return base64.standard_b64encode(original_data).decode("utf-8"), original_media_type
-    
-    # Compress image
+
     img = Image.open(image_path)
-    
-    # Convert to RGB if needed
-    if img.mode in ('RGBA', 'LA', 'P'):
-        img = img.convert('RGB')
-    
-    # Try progressively lower quality
+
+    if img.mode in ("RGBA", "LA", "P"):
+        img = img.convert("RGB")
+
     for quality in [85, 75, 65, 55, 45]:
         buffer = io.BytesIO()
-        img.save(buffer, format='JPEG', quality=quality, optimize=True)
+        img.save(buffer, format="JPEG", quality=quality, optimize=True)
         compressed_data = buffer.getvalue()
-        
+
         if len(compressed_data) <= max_bytes:
-            print(f"  Compressed {image_path.name}: {len(original_data)/1024/1024:.1f}MB → {len(compressed_data)/1024/1024:.1f}MB (quality={quality})")
-            return base64.standard_b64encode(compressed_data).decode("utf-8"), "image/jpeg"
-    
-    # If still too large, resize
+            print(
+                f"  Compressed {image_path.name}: "
+                f"{len(original_data)/1024/1024:.1f}MB → {len(compressed_data)/1024/1024:.1f}MB "
+                f"(quality={quality})"
+            )
+            return base64.b64encode(compressed_data).decode("utf-8"), "image/jpeg"
+
     img.thumbnail((2000, 2000))
     buffer = io.BytesIO()
-    img.save(buffer, format='JPEG', quality=45, optimize=True)
+    img.save(buffer, format="JPEG", quality=45, optimize=True)
     compressed_data = buffer.getvalue()
     print(f"  Resized {image_path.name}: {len(compressed_data)/1024/1024:.1f}MB")
-    return base64.standard_b64encode(compressed_data).decode("utf-8"), "image/jpeg"
+    return base64.b64encode(compressed_data).decode("utf-8"), "image/jpeg"
+
+
+def _clean_json_response(text: str) -> str:
+    cleaned = text.strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    if cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+    return cleaned.strip()
 
 
 def extract_catalogue_page_batch(
@@ -69,22 +71,22 @@ def extract_catalogue_page_batch(
 ) -> List[Dict[str, Any]]:
     """
     Extract product data from multiple catalogue pages in one API call.
-    
-    Args:
-        client: Anthropic client instance
-        image_paths: List of paths to image files
-        page_numbers: List of page numbers corresponding to images
-        model: Claude model to use
-        
-    Returns:
-        List of dictionaries with extraction results (one per page)
+
+    Important:
+    - The page numbers passed in are the source of truth.
+    - Model-returned page values are not trusted for routing.
     """
+    response_text = ""
     try:
-        # Build content array with all images
         content = []
-        
+
         for image_path, page_num in zip(image_paths, page_numbers):
             image_data, media_type = compress_image_if_needed(image_path)
+
+            content.append({
+                "type": "text",
+                "text": f"PAGE {page_num}: extract products from this image only."
+            })
             content.append({
                 "type": "image",
                 "source": {
@@ -93,84 +95,117 @@ def extract_catalogue_page_batch(
                     "data": image_data,
                 },
             })
-        
-        # Add text prompt at the end
-        page_range = f"{page_numbers[0]}-{page_numbers[-1]}" if len(page_numbers) > 1 else str(page_numbers[0])
-        prompt_text = f"""{PROMPT}
 
-These are pages {page_range}.
-For each product, include the correct page number (one of: {page_numbers}).
-Return a single JSON array containing products from ALL pages."""
-        
+        prompt_text = f"""
+{PROMPT}
+
+You are processing {len(page_numbers)} pages: {page_numbers}.
+
+Return ONLY valid JSON in this exact format:
+[
+  {{
+    "page": {page_numbers[0]},
+    "products": [ ... ]
+  }}
+]
+
+Rules:
+- Return exactly {len(page_numbers)} page objects, in the same order as the input images.
+- Do not merge pages.
+- Do not invent page numbers.
+- Use the provided page number for each page object.
+- Inside each page object, include all products found on that page.
+- If a page has no products, return an empty products array for that page.
+"""
+
         content.append({
             "type": "text",
             "text": prompt_text
         })
-        
-        # Create message
+
         message = client.messages.create(
             model=model,
-            max_tokens=8192,  # Increased for multiple pages
-            messages=[{
-                "role": "user",
-                "content": content
-            }]
+            max_tokens=8192,
+            messages=[{"role": "user", "content": content}]
         )
-        
-        # Extract text response
+
         response_text = message.content[0].text
-        
-        # Parse JSON
-        cleaned_response = response_text.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-        
-        all_products = json.loads(cleaned_response)
-        
-        # Group products by page
-        products_by_page = {page_num: [] for page_num in page_numbers}
-        for product in all_products:
-            page = product.get('page')
-            if page in products_by_page:
-                products_by_page[page].append(product)
-        
-        # Create result for each page
-        results = []
-        for image_path, page_num in zip(image_paths, page_numbers):
+        cleaned_response = _clean_json_response(response_text)
+        parsed = json.loads(cleaned_response)
+
+        results: List[Dict[str, Any]] = []
+
+        # Preferred format: [{page: X, products:[...]} , ...]
+        if isinstance(parsed, list) and (len(parsed) == 0 or (isinstance(parsed[0], dict) and "products" in parsed[0])):
+            for idx, (image_path, expected_page) in enumerate(zip(image_paths, page_numbers)):
+                block = parsed[idx] if idx < len(parsed) and isinstance(parsed[idx], dict) else {}
+                raw_products = block.get("products", []) if isinstance(block, dict) else []
+
+                normalized_products = []
+                if isinstance(raw_products, list):
+                    for product in raw_products:
+                        if isinstance(product, dict):
+                            product["page"] = expected_page
+                            normalized_products.append(product)
+
+                results.append({
+                    "success": True,
+                    "page": expected_page,
+                    "image_path": str(image_path),
+                    "products": normalized_products,
+                    "raw_response": response_text if idx == 0 else None,
+                    "error": None
+                })
+
+            return results
+
+        # Fallback format: flat array of products
+        products_by_page = {p: [] for p in page_numbers}
+
+        if isinstance(parsed, list):
+            for product in parsed:
+                if not isinstance(product, dict):
+                    continue
+
+                # Trust caller page numbers over model page numbers
+                model_page = product.get("page")
+                if model_page in products_by_page:
+                    page_key = model_page
+                else:
+                    # keep data instead of dropping it
+                    page_key = page_numbers[0]
+
+                product["page"] = page_key
+                products_by_page.setdefault(page_key, []).append(product)
+
+        for idx, (image_path, expected_page) in enumerate(zip(image_paths, page_numbers)):
             results.append({
                 "success": True,
-                "page": page_num,
+                "page": expected_page,
                 "image_path": str(image_path),
-                "products": products_by_page[page_num],
-                "raw_response": response_text if page_num == page_numbers[0] else None,  # Only store once
+                "products": products_by_page.get(expected_page, []),
+                "raw_response": response_text if idx == 0 else None,
                 "error": None
             })
-        
+
         return results
-        
+
     except json.JSONDecodeError as e:
-        # If JSON parsing fails, mark all pages as failed
         return [{
             "success": False,
             "page": page_num,
             "image_path": str(image_path),
             "products": [],
-            "raw_response": message.content[0].text if 'message' in locals() else None,
+            "raw_response": response_text if response_text else None,
             "error": f"JSON parsing error: {str(e)}"
         } for image_path, page_num in zip(image_paths, page_numbers)]
-        
+
     except Exception as e:
-        # If extraction fails, mark all pages as failed
         return [{
             "success": False,
             "page": page_num,
             "image_path": str(image_path),
             "products": [],
-            "raw_response": None,
+            "raw_response": response_text if response_text else None,
             "error": f"Extraction error: {str(e)}"
         } for image_path, page_num in zip(image_paths, page_numbers)]

@@ -167,7 +167,7 @@ def process_catalogue(
 
 if __name__ == "__main__":
     # TEST MODE - Process only a few images to verify quality
-    TEST_MODE = True
+    TEST_MODE = False
     
     if TEST_MODE:
         print("=" * 60)
@@ -177,9 +177,9 @@ if __name__ == "__main__":
         result = process_catalogue(
             images_dir=r"C:\Users\User\Documents\catalogue_parser\catalogues\images", 
             output_file=r"C:\Users\User\Documents\catalogue_parser\data\testing\testing.json",
-            skip_first=0,  # Skip cover pages
-            start_page=117,
-            end_page=118,  # Test first 10 catalogue pages
+            skip_first=3,  # Skip cover pages
+            start_page=174,
+            end_page=174,  # Test first 10 catalogue pages
             model=model,
             delay=1.0,
             batch_size=2  # Process 2 images per API call
@@ -195,7 +195,7 @@ if __name__ == "__main__":
             output_file=r"C:\Users\User\Documents\catalogue_parser\data\full_results.json",
             skip_first=3,  # Skip first 3 pages (cover, intro, etc.)
             start_page=1,
-            end_page=287,  # 291 total - 3 skip - 1 last page = 287
+            end_page=290,  # 291 total - 3 skip - 1 last page = 287
             model=model,
             delay=0.5,
             batch_size=2  # Batch 2 images per call for speed

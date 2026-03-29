@@ -11,13 +11,13 @@ For each product, include only fields that are visible or inferable from the ima
   "dimensions": string or null,
   "materials": object or null,
   "colors": object or null,
-  "seater": string or null,
+  "seater": string or null, (looks like: 	Corner set + table or 1 table + 4 chairs)
   "other": object or null
 }
 
 Rules:
 - Use null for missing values.
-- The code on the corner of images is price.
+- The code on the edge of that item's image is the price.
 - Keep asterisks (*) and slashes (/) as normal characters.
 - Do not use backslashes in text values.
 - Split multiple color swatches into separate color lists.
@@ -27,13 +27,13 @@ Rules:
 - Include the page number in every product object.
 - Do NOT infer or guess materials, dimensions, or specifications.
 - If a characteristic is explicitly written but does not match existing fields, include it under a consistent, descriptive key.
-- Only extract or infer colors when the same product model appears multiple times with different visible variations.
-- In that case, use color to distinguish the variants (based on visible differences or swatches).
-- If a product appears only once, do not infer color unless it is explicitly written.
-- If color is unclear, use null.
+
+- ONLY treat multiple colors as valid if they are clearly shown as separate swatches or explicitly listed as variants.
+- If colors appear separated by "/" or similar formatting, DO NOT treat them as multiple colors; select only the primary dominant color.
+- If a product appears only once, always default to a single color value (never multiple).
+-  when unsure of color, do not default to gray, beige, or black instead prefer the closest visible hue (e.g., brown,blue..) if any color tint is present.
 Page number:
 """
-
 
 # # Your extraction prompt
 # PROMPT = """Extract all product information from this catalogue image. Follow these rules:
