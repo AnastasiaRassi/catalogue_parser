@@ -6138,20 +6138,7 @@
       "seater": "Table + 6 chairs",
       "other": null
     },
-    {
-      "page": 149,
-      "model": "MOD#M015",
-      "price": null,
-      "dimensions": null,
-      "materials": null,
-      "colors": {
-        "stripe": "Multi-color (green, white, yellow, black)"
-      },
-      "seater": null,
-      "other": {
-        "type": "Chair cushion"
-      }
-    },
+   
     {
       "page": 149,
       "model": "MOD#4001/5001",
@@ -13322,7 +13309,8 @@
         "description": "Blue flowers with yellow centers growing among rocks"
       }
     }
-  ],
+  ]
+  ,
   "detailed_results": [
     {
       "success": true,
@@ -20862,20 +20850,7 @@
           "seater": "Set table + 6 chairs",
           "other": null
         },
-        {
-          "page": 150,
-          "model": "MOD#M015",
-          "price": null,
-          "dimensions": null,
-          "materials": null,
-          "colors": {
-            "stripe": "Multi-color (green, white, yellow, black)"
-          },
-          "seater": null,
-          "other": {
-            "type": "Chair cushion"
-          }
-        },
+        
         {
           "page": 150,
           "model": "MOD#4509/5049-6",
@@ -21638,23 +21613,8 @@
           },
           "seater": "Set table + 4 chairs",
           "other": null
-        },
-        {
-          "page": 168,
-          "model": "MOD#M015",
-          "price": "6104",
-          "dimensions": null,
-          "materials": null,
-          "colors": {
-            "primary": "Green/Brown/White striped"
-          },
-          "seater": null,
-          "other": {
-            "type": "Chair cushion"
-          }
-        }
-      ],
-      "raw_response": null,
+        }],
+          "raw_response": "```json\n[\n  {\n    \"page\": 169,\n    \"products\": [\n      {\n        \"page\": 169,\n        \"model\": \"TD536/PP902\",\n        \"price\": \"62301\",\n        \"dimensions\": \"90*90*75 Cm\",\n        \"materials\": {\n          \"frame\": \"Steel\",\n          \"top\": \"PP\",\n          \"chairs\": \"PP\"\n        },\n        \"colors\": {\n          \"frame\": \"Black\"\n        },\n        \"seater\": \"Set table + 4 chairs\",\n        \"other\": {\n          \"description\": \"Steel frame table, PP table top and chairs\"\n        }\n      },\n      {\n        \"page\": 169,\n        \"model\": \"TD536/PP902\",\n        \"price\": \"62301\",\n        \"dimensions\": \"90*90*75 Cm\",\n        \"materials\": {\n          \"frame\": \"Steel\",\n          \"top\": \"PP\",\n          \"chairs\": \"PP\"\n        },\n        \"colors\": {\n          \"frame\": \"White\"\n        },\n        \"seater\": \"Set table + 4 chairs\",\n        \"other\": {\n          \"description\": \"Steel frame table, PP table top and chairs\"\n        }\n      }\n    ]\n  },\n  {\n    \"page\": 170,\n    \"products\": [\n      {\n        \"page\": 170,\n        \"model\": \"TD536/PP903\",\n        \"price\": \"62501\",\n        \"dimensions\": \"90*90*75 Cm\",\n        \"materials\": {\n          \"frame\": \"Steel\",\n          \"top\": \"PP\",\n          \"chairs\": \"PP\"\n        },\n        \"colors\": {\n          \"frame\": \"Black\"\n        },\n        \"seater\": \"Set table + 4 chairs\",\n        \"other\": {\n          \"description\": \"Steel frame table, PP table top and chairs\"\n        }\n      },\n      {\n        \"page\": 170,\n        \"model\": \"TD536/PP903\",\n        \"price\": \"62501\",\n        \"dimensions\": \"90*90*75 Cm\",\n        \"materials\": {\n          \"frame\": \"Steel\",\n          \"top\": \"PP\",\n          \"chairs\": \"PP\"\n        },\n        \"colors\": {\n          \"frame\": \"White\"\n        },\n        \"seater\": \"Set table + 4 chairs\",\n        \"other\": {\n          \"description\": \"Steel frame table, PP table top and chairs\"\n        }\n      }\n    ]\n  }\n]\n```",
       "error": null
     },
     {
@@ -29500,8 +29460,8 @@
           }
         }
       ],
-      "raw_response": "```json\n[\n  {\n    \"page\": 287,\n    \"products\": [\n      {\n        \"page\": 287,\n        \"model\": null,\n        \"price\": null,\n        \"dimensions\": null,\n        \"materials\": null,\n        \"colors\": {\n          \"primary\": \"blue\"\n        },\n        \"seater\": null,\n        \"other\": {\n          \"type\": \"flowering plant\",\n          \"description\": \"Blue flowers with yellow centers growing among rocks\"\n        }\n      }\n    ]\n  }\n]\n```",
+      "raw_response": "",
       "error": null
     }
-  ]
+      ]
 }
